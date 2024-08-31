@@ -180,13 +180,10 @@ while True:
 	root.update()
 
 	length = varint.convertFrom(socket)
-
-	response = b''.join([socket.recv(1024) for i in range(length // 1024)])
-
-	if length - length // 1024 > 0:
-		response += socket.recv(length - length // 1024)
-
+	response = socket.recv(length)
 	stream = io.BytesIO(varint.convertTo(length) + response)
+
+	print(length, len(response))
 
 	try:
 		packet_id = response[0]
@@ -273,7 +270,6 @@ while True:
 		)
 	elif packet_id == Serverbound.SpawnEntity.PACKET_ID:
 		header = (varint.convertFrom(stream),  stream.read(1)[0])
-		print(length, header, len(response))
 		packet = Serverbound.SpawnEntity.read(stream)
 
 		mobs_window.listbox.insert(0, mobs.MOBS[packet._type]['name'] + " #" + str(packet._entity_id))
@@ -299,7 +295,7 @@ while True:
 		header = (varint.convertFrom(stream),  stream.read(1)[0])
 		packet = Serverbound.SpawnPlayer.read(stream)
 
-		mobs_window.listbox.insert(0, "Player #" + str(packet._entity_id))
+		mobs_window.listbox.insert(0, mobs.MOBS[packet._type]['name'] + " #" + str(packet._entity_id))
 		mobs_window.mobs.insert(0, packet)
 	elif packet_id == Serverbound.ChatMessage.PACKET_ID:
 		header = (varint.convertFrom(stream),  stream.read(1)[0])

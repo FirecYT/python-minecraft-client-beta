@@ -1,7 +1,7 @@
 import varint, struct
 from Packet import reader
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 JUST = 20
 
 BASE_STRING = lambda name: '┃ ' + ((name + ':').ljust(JUST)) + ' ┃'
