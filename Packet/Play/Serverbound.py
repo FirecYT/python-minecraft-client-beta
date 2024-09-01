@@ -126,6 +126,19 @@ class Disconnect(BasePacket):
 			reason		 = reader(stream, 'str'),
 		)
 
+class KeepAlive(BasePacket):
+	PACKET_ID = 0x21
+
+	def __init__(self, keep_id):
+		BasePacket.__init__(self)
+		self._keep_id = keep_id
+
+	@classmethod
+	def read(cls: BasePacket, stream: socket):
+		return cls(
+			keep_id = reader(stream, 'long')
+		)
+
 class PlayerPositionAndLook(BasePacket):
 	PACKET_ID = 0x38
 

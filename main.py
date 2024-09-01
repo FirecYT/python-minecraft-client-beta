@@ -140,24 +140,24 @@ root = tkinter.Tk()
 notebook = ttk.Notebook(root)
 notebook.pack(expand=True, fill='both')
 
+mobs3d_window = enemis3D.Window(notebook, width=320, height=200)
 mobs_window = mobs.Window(notebook)
 map_window = map.Window(notebook)
 chat_window = chat.Window(notebook)
 playerPositionAndLook = PlayerPositionAndLook.Window(notebook)
-mobs3d_window = enemis3D.Window(notebook, width=320, height=200)
 
+mobs3d_window.pack(fill='both', expand=True)
+mobs3d_window.animate = 1
 mobs_window.pack(fill='both', expand=True)
 map_window.pack(fill='both', expand=True)
 chat_window.pack(fill='both', expand=True)
 playerPositionAndLook.pack(fill='both', expand=True)
-mobs3d_window.pack(fill='both', expand=True)
-mobs3d_window.animate = 1
 
+notebook.add(mobs3d_window, text="Mobs3D")
 notebook.add(mobs_window, text="Mobs")
 notebook.add(map_window, text="Map")
 notebook.add(chat_window, text="Chat")
 notebook.add(playerPositionAndLook, text="Player")
-notebook.add(mobs3d_window, text="Mobs3D")
 
 def sendMessage(event):
 	text = chat_window.input.get()
@@ -180,15 +180,10 @@ while True:
 	root.update()
 
 	length = varint.convertFrom(socket)
-	response = socket.recv(length)
+	response = varint.recv(socket, length)
 	stream = io.BytesIO(varint.convertTo(length) + response)
 
-	print(length, len(response))
-
-	try:
-		packet_id = response[0]
-	except:
-		print(length, response)
+	packet_id = response[0]
 
 	if packet_id == 0x26:
 		debug.var_debug_stream([
@@ -330,19 +325,33 @@ while True:
 		debug.var_debug_stream([
 			('Reason', 'custom', packet._reason),
 		], stream, name=PACKET_NAMES[Serverbound.Disconnect.PACKET_ID])
+
+		print(packet._reason)
+	elif packet_id == Serverbound.KeepAlive.PACKET_ID:
+		header = (varint.convertFrom(stream),  stream.read(1)[0])
+		packet = Serverbound.KeepAlive.read(stream)
+
+		debug.var_debug_stream([
+			('Keep ID', 'long'),
+		], stream, header=header, name=PACKET_NAMES[Serverbound.KeepAlive.PACKET_ID])
+
+		print(packet._keep_id)
+
+		answer = Clientbound.KeepAlive(packet._keep_id)
+		answer.write(socket)
 	elif packet_id == Serverbound.PlayerPositionAndLook.PACKET_ID:
 		header = (varint.convertFrom(stream),  stream.read(1)[0])
 		packet = Serverbound.PlayerPositionAndLook.read(stream)
 
 		debug.var_debug_stream([
-			('x', 'custom', packet._x),
-			('y', 'custom', packet._y),
-			('z', 'custom', packet._z),
-			('yaw', 'custom', packet._yaw),
-			('pitch', 'custom', packet._pitch),
-			('flags', 'custom', packet._flags),
-			('teleport_id', 'custom', packet._teleport_id),
-			('dismount_vehicle', 'custom', packet._dismount_vehicle),
+			('x', 'double'),
+			('y', 'double'),
+			('z', 'double'),
+			('yaw', 'float'),
+			('pitch', 'float'),
+			('flags', 'byte'),
+			('teleport_id', 'varint'),
+			('dismount_vehicle', 'bool'),
 		], stream, header=header, name=PACKET_NAMES[Serverbound.PlayerPositionAndLook.PACKET_ID])
 
 		playerPositionAndLook.label_x['text'] = packet._x
@@ -360,22 +369,6 @@ while True:
 			250 + 5,
 			250 + 5,
 			fill='red'
-		)
-
-		map_window.canvasLeft.create_oval(
-			250,
-			250,
-			250 + 5,
-			250 + 5,
-			fill='black'
-		)
-
-		map_window.canvasFront.create_oval(
-			250,
-			250,
-			250 + 5,
-			250 + 5,
-			fill='black'
 		)
 	elif packet_id == 0x3e:
 		debug.var_debug_stream([
@@ -396,4 +389,4 @@ while True:
 		if debug.DEBUG_MODE:
 			print(pack_name)
 
-	time.sleep(0.01)
+	# time.sleep(0.01)
