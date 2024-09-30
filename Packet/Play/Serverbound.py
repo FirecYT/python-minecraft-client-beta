@@ -165,3 +165,24 @@ class PlayerPositionAndLook(BasePacket):
 			teleport_id			= reader(stream, 'varint'),
 			dismount_vehicle	= reader(stream, 'bool')
 		)
+
+class DestroyEntities(BasePacket):
+	PACKET_ID = 0x3A
+
+	def __init__(self, count, entity_ids):
+		BasePacket.__init__(self)
+		self._count = count
+		self._entity_ids = entity_ids
+
+	@classmethod
+	def read(cls: BasePacket, stream: socket):
+		count = reader(stream, 'varint')
+		entity_ids = []
+
+		for x in range(count):
+			entity_ids.append(reader(stream, 'varint'))
+
+		return cls(
+			count		= count,
+			entity_ids	= entity_ids,
+		)

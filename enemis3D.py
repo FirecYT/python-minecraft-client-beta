@@ -15,22 +15,35 @@ def Cube(x, y, z, size):
 		for vertex in edge:
 			GL.glVertex3fv(
 				(
-					verticies[vertex][0] * size - 0.5,
-					verticies[vertex][1] * size - 0.5,
-					verticies[vertex][2] * size - 0.5,
+					(verticies[vertex][0] - 0.5) * size,
+					(verticies[vertex][1] - 0.5) * size,
+					(verticies[vertex][2] - 0.5) * size,
 				)
 			)
 	GL.glEnd()
 	GL.glTranslatef(-x, -y, -z)
 
 class Window(pyopengltk.OpenGLFrame):
-	def __init__(self, master=None, cnf={}, **args):
+	def __init__(self, master=None, cnf={}, entities={}, **args):
 		super().__init__(master, cnf, **args)
 
-		self.cubes = [
-			(0, 0, 0, 1, (1, 0, 0))
-		]
-		self.timer = 0
+		self.entities = entities
+		self.angle = 0
+		self.distance = 50
+
+		self.center = (0, 0, 0)
+
+	def angleMinus(self, event):
+		if event.keycode == 68:
+			self.angle -= 1
+		elif event.keycode == 65:
+			self.angle += 1
+		elif event.keycode == 83:
+			self.distance += 1
+		elif event.keycode == 87:
+			self.distance -= 1
+		else:
+			print(event.keycode)
 
 	def initgl(self):
 		GL.glLoadIdentity()
@@ -41,19 +54,27 @@ class Window(pyopengltk.OpenGLFrame):
 
 		GL.glPushMatrix()
 		GLU.gluLookAt(
-			math.cos(math.pi * self.timer / 180) * 50,
-			0,
-			math.sin(math.pi * self.timer / 180) * 50,
-			0, 0, 0,
+			math.cos(math.pi * self.angle / 180) * self.distance + self.center[0],
+			20 + self.center[1],
+			math.sin(math.pi * self.angle / 180) * self.distance + self.center[2],
+			0 + self.center[0], 0 + self.center[1], 0 + self.center[2],
 			0, 1, 0
 		)
 
 		GL.glRotate(1, 0, 1, 0)
 
-		GL.glColor3f(1, 1, 1)
-		for cube in self.cubes:
-			GL.glColor3f(*cube[4])
-			Cube(*cube[:4])
+		for index in self.entities:
+			entity = self.entities[index]
+
+			GL.glColor3f(*entity['color'])
+			Cube(*entity['position'])
+
+			# GL.glColor3f(0, 1, 1)
+			# GL.glBegin(GL.GL_LINES)
+			# for pose in cube['poses']:
+			# 	GL.glVertex3fv(
+			# 		pose[:3]
+			# 	)
+			# GL.glEnd()
 
 		GL.glPopMatrix()
-		self.timer += 1

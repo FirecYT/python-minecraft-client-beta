@@ -4,14 +4,14 @@ SEGMENT_BITS = 0x7f
 CONTINUE_BIT = 0x80
 
 def recv(stream, length):
-	result = stream.recv(min(length, 1024))
+	result = stream.recv(min(length, 4096))
 	last_len = len(result)
 
 	while len(result) < length:
-		result += stream.recv(min(length - len(result), 1024))
+		result += stream.recv(min(length - len(result), 4096))
 
 		if last_len == len(result):
-			time.sleep(0.01)
+			time.sleep(0.0000001)
 
 		last_len = len(result)
 
